@@ -13,20 +13,17 @@ static dev_t dev_num = 0; // Global variable for the device number
 static struct class *cl;  // Global variable for the device class
 static struct cdev c_dev; // Global variable for the character device structure
 
-static ssize_t cma_write( 
-              struct file *file_ptr , 
-              char __user *user_buffer , 
-              size_t count , 
-              loff_t *possition)
+static ssize_t cma_write(struct file *f, const char __user *buf, size_t len,
+      loff_t *off)
 {
-        printk(KERN_INFO "CMA-module: Device file is write at offset = %i, read bytes count = %u", (int)*possition , (unsigned int)count);
-        return 0;
+    printk(KERN_INFO "Driver: write()\n");
+      return len;
 }
+
 
 static struct file_operations cma_module_fops = {
         .owner = THIS_MODULE,
-        //.write = cma_write,
-        //.release = cma_release,
+        .write = cma_write,
 };
 
 static int create_cma_interface(void)
