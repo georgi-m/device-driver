@@ -26,12 +26,13 @@ static long cma_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
                 return -EFAULT;
         }
         printk(KERN_INFO "CMA-module: end copy from user\n");
-        printk(KERN_INFO "CMA-module: buffer_size %llx", cma.buffer_size);
+        printk(KERN_INFO "CMA-module: buffer_size %llx\n", cma.buffer_size);
         if ((mem_ptr = kmalloc(cma.buffer_size, GFP_KERNEL)) == NULL)
                 return -ENOMEM;
-        printk(KERN_INFO "Virual address is %p", mem_ptr);
         cma.virt_start_addr = (u64)mem_ptr;
-        printk(KERN_INFO "Virual address is %llx", cma.virt_start_addr);
+        cma.phys_start_addr = virt_to_phys(mem_ptr);
+        printk(KERN_INFO "Physical address is %llx\n", cma.phys_start_addr);
+        printk(KERN_INFO "Virual address is %llx\n", cma.virt_start_addr);
         if (copy_to_user((struct cma_alloc *)arg, &cma, sizeof(struct cma_alloc)) != 0) {
                 printk("Error in copy to user\n");
                 return -EFAULT;
