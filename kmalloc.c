@@ -22,7 +22,7 @@ static long cma_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
         
         printk(KERN_INFO "CMA-module: start copy from user\n");
         if (copy_from_user(&cma, (struct cma_alloc *)arg, sizeof(struct cma_alloc)) != 0) {
-                printk("Error in copy from user");        
+                printk("CMA-module: Error in copy from user");        
                 return -EFAULT;
         }
         printk(KERN_INFO "CMA-module: end copy from user\n");
@@ -31,10 +31,10 @@ static long cma_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
                 return -ENOMEM;
         cma.virt_start_addr = (u64)mem_ptr;
         cma.phys_start_addr = virt_to_phys(mem_ptr);
-        printk(KERN_INFO "Physical address is %llx\n", cma.phys_start_addr);
-        printk(KERN_INFO "Virual address is %llx\n", cma.virt_start_addr);
+        printk(KERN_INFO "CMA-module: Physical address is %llx\n", cma.phys_start_addr);
+        printk(KERN_INFO "CMA-module: Virual address is %llx\n", cma.virt_start_addr);
         if (copy_to_user((struct cma_alloc *)arg, &cma, sizeof(struct cma_alloc)) != 0) {
-                printk("Error in copy to user\n");
+                printk("CMA-module: Error in copy to user\n");
                 return -EFAULT;
         }
         return 0;
@@ -43,10 +43,6 @@ static long cma_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 static int cma_open(struct inode * in, struct file * file)
 {
         printk(KERN_INFO "CMA-module: Trying to open()\n");
-        //struct dev_info *cma;
-        //cma = container_of(in->i_cdev, struct dev_info, c_dev);
-        //file->private_data = cma;
-        //printk("CMA-module: device is opened\n");
         return 0;
 }
 
