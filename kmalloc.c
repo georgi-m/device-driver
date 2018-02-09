@@ -6,31 +6,51 @@
 #include <linux/fs.h>           /* file stuff */
 #include <linux/device.h>
 #include <linux/ioctl.h>
+#include <linux/uaccess.h>
 #include "kmalloc.h"
 
-#define BUFFER_SIZE 4096
 #define DEVICE_NAME "cma_module"
 
 static dev_t dev_num = 0; // Global variable for the device number
 static struct class *cl;  // Global variable for the device class
 static struct cdev c_dev; // Global variable for the character device structure
-
-//static ssize_t cma_write(struct file *f, const char __user *buf, size_t len,
-//      loff_t *off)
-//{
-//    printk(KERN_INFO "Driver: write()\n");
-//      return len;
-//}
+static void* mem_ptr = NULL;
 
 static long cma_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
-        printk(KERN_INFO "Driver: ioctl()\n");
+        struct cma_alloc cma;
+        
+        printk(KERN_INFO "CMA-module: start copy from user\n");
+        if (copy_from_user(&cma, (struct cma_alloc *)arg, sizeof(struct cma_alloc)) != 0) {
+                printk("Error in copy from user");        
+                return -EFAULT;
+        }
+        printk(KERN_INFO "CMA-module: end copy from user\n");
+        printk(KERN_INFO "CMA-module: buffer_size %llx", cma.buffer_size);
+        if ((mem_ptr = kmalloc(cma.buffer_size, GFP_KERNEL)) == NULL)
+                return -ENOMEM;
+        printk(KERN_INFO "Virual address is %p", mem_ptr);
+        cma.virt_start_addr = (u64)mem_ptr;
+        printk(KERN_INFO "Virual address is %llx", cma.virt_start_addr);
+        if (copy_to_user((struct cma_alloc *)arg, &cma, sizeof(struct cma_alloc)) != 0) {
+                printk("Error in copy to user\n");
+                return -EFAULT;
+        }
+        return 0;
+}
+
+static int cma_open(struct inode * in, struct file * file)
+{
+        //struct dev_info *cma;
+        //cma = container_of(in->i_cdev, struct dev_info, c_dev);
+        //file->private_data = cma;
+        //printk("CMA-module: device is opened\n");
         return 0;
 }
 
 static struct file_operations cma_module_fops = {
         .owner = THIS_MODULE,
-        //.write = cma_write,
+        .open = cma_open,
         .unlocked_ioctl  = cma_ioctl,
 };
 
@@ -68,10 +88,6 @@ static int __init cma_init(void)
 {
         int result = 0;
         printk(KERN_INFO "CMA-module: Initialization started");
-        //void * mem_ptr;
-        //if ((mem_ptr = kmalloc(BUFFER_SIZE, GFP_KERNEL)) == NULL)
-        //        return -ENOMEM;
-        //printk(KERN_INFO "Virual address is %p", mem_ptr);
         result = create_cma_interface();
         return result;
 }

@@ -6,6 +6,7 @@ struct cma_alloc
 {
         u64 virt_start_addr;
         u64 phys_start_addr;
+        u64 buffer_size;
 };
 
 #define IOCTL_CMA_ALLOC  _IOR('A', 1, struct cma_alloc)
