@@ -41,6 +41,7 @@ static long cma_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 
 static int cma_open(struct inode * in, struct file * file)
 {
+        printk(KERN_INFO "CMA-module: Trying to open()\n");
         //struct dev_info *cma;
         //cma = container_of(in->i_cdev, struct dev_info, c_dev);
         //file->private_data = cma;
@@ -58,7 +59,7 @@ static int create_cma_interface(void)
 {
         int ret;
         struct device *dev_ret;
-        printk(KERN_INFO "CMA-module: register_device() is called.");
+        printk(KERN_INFO "CMA-module: alloc_chrdev_region() is called.\n");
         ret = alloc_chrdev_region(&dev_num, 0, 1, DEVICE_NAME);
         if (ret < 0) {
                 printk(KERN_WARNING "CMA-module: Unable to allocate character device region\n");
@@ -87,7 +88,7 @@ static int create_cma_interface(void)
 static int __init cma_init(void)
 {
         int result = 0;
-        printk(KERN_INFO "CMA-module: Initialization started");
+        printk(KERN_INFO "CMA-module: Initialization started\n");
         result = create_cma_interface();
         return result;
 }
@@ -98,7 +99,7 @@ static void __exit cma_exit(void)
         device_destroy(cl, dev_num);
         class_destroy(cl);
         unregister_chrdev_region(dev_num, 1);
-        printk(KERN_INFO "CMA-module: Exiting");
+        printk(KERN_INFO "CMA-module: Exiting\n");
 }
 
 module_init(cma_init);
