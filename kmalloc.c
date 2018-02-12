@@ -29,7 +29,7 @@ static long cma_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
                                 return -EFAULT;
                         }
                         printk(KERN_INFO "CMA-module: end copy from user\n");
-                        printk(KERN_INFO "CMA-module: buffer_size %llx\n", cma.buffer_size);
+                        printk(KERN_INFO "CMA-module: buffer_size %llu\n", cma.buffer_size);
                         if ((mem_ptr = kmalloc(cma.buffer_size, GFP_KERNEL)) == NULL)
                                 return -ENOMEM;
                         cma.virt_start_addr = (u64)mem_ptr;
@@ -101,6 +101,7 @@ static int __init cma_init(void)
         int result = 0;
         printk(KERN_INFO "CMA-module: Initialization started\n");
         result = create_cma_interface();
+        printk(KERN_INFO "CMA-module: KMALLOC_MAX_SIZE %lu\n", KMALLOC_MAX_SIZE);
         return result;
 }
 
