@@ -12,7 +12,8 @@ struct cma_alloc
         u64 buffer_size;
 };
 
-#define IOCTL_CMA_ALLOC  _IOR('A', 1, struct cma_alloc)
+#define IOCTL_CMA_ALLOC _IOWR('A', 1, struct cma_alloc)
+#define IOCTL_CMA_RELEASE _IO('A', 2)
 
 int main()
 {
@@ -26,6 +27,7 @@ int main()
         ioctl(fd, IOCTL_CMA_ALLOC, &cma);
         std::cout << "after ioctl call Virtual address: " <<std::hex<<cma.virt_start_addr<< std::endl;
         std::cout << "after ioctl call Physical address: " <<std::hex<<cma.phys_start_addr<< std::endl;
+        ioctl(fd, IOCTL_CMA_RELEASE);
         close(fd);
         return 0;
 }

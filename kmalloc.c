@@ -18,26 +18,40 @@ static void* mem_ptr = NULL;
 
 static long cma_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
+        ssize_t ret = 0;
         struct cma_alloc cma;
         
-        printk(KERN_INFO "CMA-module: start copy from user\n");
-        if (copy_from_user(&cma, (struct cma_alloc *)arg, sizeof(struct cma_alloc)) != 0) {
-                printk("CMA-module: Error in copy from user");        
-                return -EFAULT;
+        switch (cmd) {
+                case IOCTL_CMA_ALLOC:
+                        printk(KERN_INFO "CMA-module: start copy from user\n");
+                        if (copy_from_user(&cma, (struct cma_alloc *)arg, sizeof(struct cma_alloc)) != 0) {
+                                printk("CMA-module: Error in copy from user");        
+                                return -EFAULT;
+                        }
+                        printk(KERN_INFO "CMA-module: end copy from user\n");
+                        printk(KERN_INFO "CMA-module: buffer_size %llx\n", cma.buffer_size);
+                        if ((mem_ptr = kmalloc(cma.buffer_size, GFP_KERNEL)) == NULL)
+                                return -ENOMEM;
+                        cma.virt_start_addr = (u64)mem_ptr;
+                        cma.phys_start_addr = virt_to_phys(mem_ptr);
+                        printk(KERN_INFO "CMA-module: Physical address is %llx\n", cma.phys_start_addr);
+                        printk(KERN_INFO "CMA-module: Virual address is %llx\n", cma.virt_start_addr);
+                        printk(KERN_INFO "CMA-module: start copy to user\n");
+                        if (copy_to_user((struct cma_alloc *)arg, &cma, sizeof(struct cma_alloc)) != 0) {
+                                printk("CMA-module: Error in copy to user\n");
+                                return -EFAULT;
+                        }
+                        printk(KERN_INFO "CMA-module: end copy to user\n");
+                        break;
+                 case IOCTL_CMA_RELEASE:
+                        printk(KERN_INFO "CMA-module: Release memory\n");
+                        kfree(mem_ptr);
+                        break;
+                 default:
+                        ret = -EINVAL;
+                        break;
         }
-        printk(KERN_INFO "CMA-module: end copy from user\n");
-        printk(KERN_INFO "CMA-module: buffer_size %llx\n", cma.buffer_size);
-        if ((mem_ptr = kmalloc(cma.buffer_size, GFP_KERNEL)) == NULL)
-                return -ENOMEM;
-        cma.virt_start_addr = (u64)mem_ptr;
-        cma.phys_start_addr = virt_to_phys(mem_ptr);
-        printk(KERN_INFO "CMA-module: Physical address is %llx\n", cma.phys_start_addr);
-        printk(KERN_INFO "CMA-module: Virual address is %llx\n", cma.virt_start_addr);
-        if (copy_to_user((struct cma_alloc *)arg, &cma, sizeof(struct cma_alloc)) != 0) {
-                printk("CMA-module: Error in copy to user\n");
-                return -EFAULT;
-        }
-        return 0;
+        return ret;
 }
 
 static int cma_open(struct inode * in, struct file * file)
