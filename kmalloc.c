@@ -42,13 +42,13 @@ struct list_head *pos, *q;
 static long cma_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
         ssize_t ret = 0;
-        struct cma_alloc cma;
+        static struct cma_alloc cma;
         struct address_list *address;
         address = kmalloc(sizeof(struct address_list), GFP_KERNEL);
 
-        cma.log_control = false; // by default disabling kprint() function call.
         switch (cmd) {
                 case IOCTL_CMA_ALLOC:
+                        cma.log_control = false; // by default disabling kprint() function call.
                         ret = copy_from_user(&cma, (struct cma_alloc *)arg, sizeof(struct cma_alloc));
                         if (cma.log_control) {
                                 printk(KERN_INFO "CMA-module: start copy from user\n");
@@ -87,10 +87,9 @@ static long cma_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
                         list_for_each_safe(pos, q, &cma_address) {
                                 struct address_list *obj = NULL;
                                 obj = list_entry(pos, struct address_list, list);
+                                if (cma.log_control) {
                                         printk(KERN_INFO "CMA-module: Release address %p\n", obj->ptr);
-                                //if (cma.log_control) {
-                                //        printk(KERN_INFO "CMA-module: Release address %p\n", obj->ptr);
-                                //}
+                                }
                                 kfree(obj->ptr);
                                 list_del(pos);
                                 kfree(obj);
