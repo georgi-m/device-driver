@@ -39,6 +39,19 @@ static struct class *cl;  // Global variable for the device class
 static struct cdev c_dev; // Global variable for the character device structure
 struct list_head *pos, *q;
 
+
+static void release_memory(void)
+{
+        list_for_each_safe(pos, q, &cma_address) {
+                struct address_list *obj = NULL;
+                obj = list_entry(pos, struct address_list, list);
+                printk(KERN_DEBUG "CMA-module: Release address %p\n", obj->ptr);
+                kfree(obj->ptr);
+                list_del(pos);
+                kfree(obj);
+        }
+}
+
 static long cma_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
         ssize_t ret = 0;
@@ -84,16 +97,7 @@ static long cma_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
                         }
                         break;
                  case IOCTL_CMA_RELEASE:
-                        list_for_each_safe(pos, q, &cma_address) {
-                                struct address_list *obj = NULL;
-                                obj = list_entry(pos, struct address_list, list);
-                                if (cma.log_control) {
-                                        printk(KERN_INFO "CMA-module: Release address %p\n", obj->ptr);
-                                }
-                                kfree(obj->ptr);
-                                list_del(pos);
-                                kfree(obj);
-                        }
+                        release_memory();
                         break;
                  default:
                         ret = -EINVAL;
@@ -159,6 +163,7 @@ static void __exit cma_exit(void)
         device_destroy(cl, dev_num);
         class_destroy(cl);
         unregister_chrdev_region(dev_num, 1);
+        release_memory();
         printk(KERN_INFO "CMA-module: Exiting\n");
 }
 
